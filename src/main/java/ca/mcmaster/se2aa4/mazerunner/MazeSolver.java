@@ -2,39 +2,42 @@ package ca.mcmaster.se2aa4.mazerunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class MazeSolver {
-
+    protected static final Logger logger = LogManager.getLogger();
+    
     protected Maze mazeToSolve;
     protected Position currentPosition;
     protected Direction currentDirection;
-    protected List<Move> movesMade;
 
-    public MazeSolver(Maze mazeToSolve) {
+    public MazeSolver(Maze mazeToSolve, Direction.Directions startDirection) {
         this.mazeToSolve = mazeToSolve;
-        this.movesMade = new ArrayList<>();
         this.currentPosition = new Position(mazeToSolve.getEntryRow(), mazeToSolve.getEntryColumn());
-        this.currentDirection = new Direction(mazeToSolve.getEntryRow(), mazeToSolve.getEntryColumn(), Direction.Directions.EAST);
+        this.currentDirection = new Direction(mazeToSolve.getEntryRow(), mazeToSolve.getEntryColumn(), startDirection);
     }
 
-    public List<Move> solveMaze() throws Exception {
-        while (!isAtExit()) {
-            if (canMoveForward()) {
-                moveForward();
-            } 
-            else if (canTurnRight()) {
-                turnRight();
-            } 
-            else if (canTurnLeft()) {
-                turnLeft();
-            } 
-            else {
-                turnAround();
-            }
+    public final List<Move> solveMaze() throws Exception {
+        int exitColumn = mazeToSolve.getExitColumn();
+        int exitRow = mazeToSolve.getExitRow();
+        List<Move> movesMade = new ArrayList<>();
+
+        while (!isAtExit(exitRow, exitColumn)) {
+            logger.info("Current Position: (" + currentPosition.getRow() + ", " + currentPosition.getColumn() + ")");
+            makeMove(movesMade);
         }
-        return getMoves();
+
+        logger.info("Exit reached: (" + currentPosition.getRow() + ", " + currentPosition.getColumn() + ")");
+        return movesMade;
     }
-    
+
+    private boolean isAtExit(int exitRow, int exitColumn) {
+        return currentPosition.getRow() == exitRow && currentPosition.getColumn() == exitColumn;
+    }
+
+    protected abstract void makeMove(List<Move> movesMade) throws Exception;
+
     protected boolean canTurnRight() throws Exception {
         Position nextPosition = currentPosition.getNextPosition(currentDirection.turnRight());
         return mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn());
@@ -48,10 +51,6 @@ public abstract class MazeSolver {
     protected boolean canTurnLeft() throws Exception {
         Position nextPosition = currentPosition.getNextPosition(currentDirection.turnLeft());
         return mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn());
-    }
-
-    protected boolean isAtExit() {
-        return currentPosition.getRow() == mazeToSolve.getExitRow() && currentPosition.getColumn() == mazeToSolve.getExitColumn();
     }
 
     protected void turnRight() throws Exception {
@@ -74,7 +73,6 @@ public abstract class MazeSolver {
         currentDirection.changeDirection("R");
     }
 
-    protected List<Move> getMoves() { 
-        return movesMade;
-    }
 }
+
+

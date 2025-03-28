@@ -20,43 +20,51 @@ public class Main {
 
         options.addOption("i", true, "maze file to read");
         options.addOption("p", true, "path to validate");
+        options.addOption("l", false, "left hand rule");
 
         try {
-            
             CommandLineParser parser = new DefaultParser();
             CommandLine cmd = parser.parse(options, args);
 
             String path = cmd.getOptionValue("p");
-            String inputFile = cmd.getOptionValue("i"); 
+            String inputFile = cmd.getOptionValue("i");
+            boolean leftHand = cmd.hasOption("l");  // Check if left-hand rule is selected
 
             logger.info("**** Reading the maze from file " + inputFile);
 
-            Maze maze = new Maze(inputFile); 
+            Maze maze = new Maze(inputFile);
 
             if (path != null) { // if path is provided, validate it
                 String newPath = path.replaceAll(" ", "");
                 Path pathToValidate = new Path(maze);
                 logger.info("Path to validate: " + newPath);
                 if (pathToValidate.validatePath(newPath)) {
-                    System.out.println("correct path");
+                    System.out.println("Correct path");
                 } else {
-                    System.out.println("incorrect path");
-                }      
-            } else { // otherwise, find the path 
-                RightHand pathToFind = new RightHand(maze);
+                    System.out.println("Incorrect path");
+                }
+            } else { // otherwise, find the path
                 Path pathToPrint = new Path(maze);
-                List<Move> foundPath = pathToFind.findPath();
+                List<Move> foundPath;
+
+                if (leftHand) {
+                    LeftHand pathToFind = new LeftHand(maze);
+                    logger.info("**** Using left-hand rule to solve the maze");
+                    foundPath = pathToFind.solveMaze();
+                } else {
+                    RightHand pathToFind = new RightHand(maze);
+                    logger.info("**** Using right-hand rule to solve the maze");
+                    foundPath = pathToFind.solveMaze();
+                }
 
                 logger.info("**** Computing path");
-                System.out.println(pathToPrint.factorizedPath(foundPath));  
+                System.out.println(pathToPrint.factorizedPath(foundPath));
                 logger.info("** End of MazeRunner");
             }
 
-        } catch(Exception e) {
-            logger.error("/!\\ An error has occured /!\\");
-            logger.error("Exception: ", e); 
-
+        } catch (Exception e) {
+            logger.error("/!\\ An error has occurred /!\\");
+            logger.error("Exception: ", e);
         }
-
     }
 }

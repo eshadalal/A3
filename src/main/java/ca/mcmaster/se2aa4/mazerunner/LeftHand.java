@@ -5,49 +5,44 @@ import java.util.List;
 public class LeftHand extends MazeSolver {
 
     public LeftHand(Maze mazeToSolve) {
-        super(mazeToSolve); 
+        super(mazeToSolve, Direction.Directions.EAST);
     }
 
-    public List<Move> findPath() throws Exception {
-        int exitColumn = mazeToSolve.getExitColumn();
-        int exitRow = mazeToSolve.getExitRow();
-
-        MoveCommand turnRight = new TurnRightCommand(this);
-        MoveCommand moveForward = new MoveForwardCommand(this);
+    @Override
+    protected void makeMove(List<Move> movesMade) throws Exception {
         MoveCommand turnLeft = new TurnLeftCommand(this);
+        MoveCommand moveForward = new MoveForwardCommand(this);
+        MoveCommand turnRight = new TurnRightCommand(this);
         MoveCommand turnAround = new TurnAroundCommand(this);
 
-        while (currentPosition.getRow() != exitRow || currentPosition.getColumn() != exitColumn) {
-            // Turn left and check if forward move is possible
-            turnLeft.execute();
-            Position nextPosition = currentPosition.getNextPosition(currentDirection.getCurrentDirection());
-            // call overridden method from this class can turn left and add these extra steps to the method
-            if (mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn())) {
-                movesMade.add(new Move('L'));
+        // Try turning left first
+        turnLeft.execute();
+        if (canMoveForward()) {
+            movesMade.add(new Move('L'));
+            moveForward.execute();
+            movesMade.add(new Move('F'));
+        } else {
+            // If left is blocked, revert direction and try moving forward
+            turnRight.execute();  // Come back to the original direction
+            if (canMoveForward()) {
                 movesMade.add(new Move('F'));
                 moveForward.execute();
             } else {
-                // If left is blocked, turn right and try to move forward
-                turnRight.execute();
-                nextPosition = currentPosition.getNextPosition(currentDirection.getCurrentDirection());
-
-                if (mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn())) {
+                // If forward is blocked, turn right again and move forward
+                turnRight.execute();  // Turn right to find an alternate path
+                if (canMoveForward()) {
                     movesMade.add(new Move('R'));
-                    movesMade.add(new Move('F'));
                     moveForward.execute();
-                } else {
-                    // If forward and right are blocked, turn around (dead end)
-                    turnLeft.execute(); // Return to original direction
-                    turnAround.execute();
-                    movesMade.add(new Move('R'));
+                    movesMade.add(new Move('F'));
+                } else { 
+                    // If all directions are blocked, turn around
+                    turnLeft.execute(); // come back to original direction
+                    turnAround.execute();  // This simulates a dead-end situation
+                    movesMade.add(new Move('R'));  // Turn around twice to handle the dead-end
                     movesMade.add(new Move('R'));
                 }
             }
         }
-
-        return movesMade;  
     }
 }
 
-
-// override protected methods from mazesolver and call them here same for right hand

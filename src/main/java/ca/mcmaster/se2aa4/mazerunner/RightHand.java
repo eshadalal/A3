@@ -5,67 +5,43 @@ import java.util.List;
 public class RightHand extends MazeSolver {
 
     public RightHand(Maze mazeToSolve) {
-        super(mazeToSolve);
+        super(mazeToSolve, Direction.Directions.EAST);
     }
 
-    public List<Move> findPath() throws Exception {
-        int exitColumn = mazeToSolve.getExitColumn();
-        int exitRow = mazeToSolve.getExitRow();
-
-        MoveCommand turnRight = new TurnRightCommand(this);
-        MoveCommand moveForward = new MoveForwardCommand(this);
+    @Override
+    protected void makeMove(List<Move> movesMade) throws Exception {
         MoveCommand turnLeft = new TurnLeftCommand(this);
+        MoveCommand moveForward = new MoveForwardCommand(this);
+        MoveCommand turnRight = new TurnRightCommand(this);
         MoveCommand turnAround = new TurnAroundCommand(this);
 
-        while (currentPosition.getRow() != exitRow || currentPosition.getColumn() != exitColumn) { // while not at exit
-            // try turning right first
-            turnRight.execute();  // Execute turn right
-
-            Position nextPosition = currentPosition.getNextPosition(currentDirection.getCurrentDirection());
-            
-            // if right is valid, move forward
-            if (mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn())) {
-                movesMade.add(new Move('R'));
+        // Try turning right first
+        turnRight.execute();
+        if (canMoveForward()) {
+            movesMade.add(new Move('R'));
+            moveForward.execute();
+            movesMade.add(new Move('F'));
+        } else {
+            // If right is blocked, revert direction and try moving forward
+            turnLeft.execute();  // Come back to the original direction
+            if (canMoveForward()) {
                 movesMade.add(new Move('F'));
-                moveForward.execute(); // Execute move forward
-
+                moveForward.execute();
             } else {
-                turnLeft.execute(); // come back to original direction
-
-                // if right is invalid, try moving forward
-                nextPosition = currentPosition.getNextPosition(currentDirection.getCurrentDirection());
-                
-                if (mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn())) {
+                // If forward is blocked, turn left again and move forward
+                turnLeft.execute();  // Turn left to find an alternate path
+                if (canMoveForward()) {
+                    movesMade.add(new Move('L'));
+                    moveForward.execute();
                     movesMade.add(new Move('F'));
-                    moveForward.execute(); // Execute move forward
-
-                } else {
-                    turnLeft.execute(); // if forward is invalid, try to turn left and move forward
-
-                    nextPosition = currentPosition.getNextPosition(currentDirection.getCurrentDirection());
-
-                    if (mazeToSolve.validateMove(nextPosition.getRow(), nextPosition.getColumn())) {
-                        movesMade.add(new Move('L'));
-                        movesMade.add(new Move('F'));
-                        moveForward.execute(); // Execute move forward
-
-                    } else { // otherwise, turn around - entered dead end
-                        
-                        turnRight.execute(); // come back to original direction 
-                        turnAround.execute(); // Execute turn around
-                        movesMade.add(new Move('R'));
-                        movesMade.add(new Move('R'));
-                    }
+                } else { 
+                    // If all directions are blocked, turn around
+                    turnRight.execute(); // come back to original direction
+                    turnAround.execute();  // This simulates a dead-end situation
+                    movesMade.add(new Move('R'));  // Turn around twice to handle the dead-end
+                    movesMade.add(new Move('R'));
                 }
             }
-
-            if (currentPosition.getRow() == exitRow && currentPosition.getColumn() == exitColumn) { // if exit is reached
-                break; // exit the loop if the exit point is reached
-            }
         }
-
-        return movesMade; 
     }
-
 }
-
