@@ -16,4 +16,10 @@ public class Move {
     public void setMove(char move) {
         this.move = move;
     }
+
+    @Override
+    public String toString() {
+        return "" + move;  
+    }
+
 }

@@ -40,6 +40,7 @@ public class RightHand extends MazeSolver {
                     turnAround.execute();  // This simulates a dead-end situation
                     movesMade.add(new Move('R'));  // Turn around twice to handle the dead-end
                     movesMade.add(new Move('R'));
+                    
                 }
             }
         }
