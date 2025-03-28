@@ -92,4 +92,9 @@ public class Maze {
         return true;
     }
 
+    public boolean isAtExit(Position position) {
+        return position.getRow() == exitRow && position.getColumn() == exitColumn;
+    }
+
+
 }

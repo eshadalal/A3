@@ -34,14 +34,14 @@ public class Main {
             Maze maze = new Maze(inputFile); 
 
             if (path != null) { // if path is provided, validate it
+                String newPath = path.replaceAll(" ", "");
                 Path pathToValidate = new Path(maze);
-                logger.info("Path to validate: " + path);
-                if (pathToValidate.validatePath(path)) {
+                logger.info("Path to validate: " + newPath);
+                if (pathToValidate.validatePath(newPath)) {
                     System.out.println("correct path");
                 } else {
                     System.out.println("incorrect path");
                 }      
-
             } else { // otherwise, find the path 
                 RightHand pathToFind = new RightHand(maze);
                 Path pathToPrint = new Path(maze);
